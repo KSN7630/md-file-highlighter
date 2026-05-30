@@ -1,0 +1,98 @@
+{
+  "name": "md-file-highlighter",
+  "displayName": "MD File Highlighter",
+  "description": "Highlight text in any Markdown file. The highlight is written into the file as a standard <mark> element, so it renders highlighted in every Markdown viewer.",
+  "version": "0.1.0",
+  "publisher": "ownedbyindia",
+  "license": "MIT",
+  "homepage": "https://www.ownedbyindia.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/USERNAME/md-file-highlighter.git"
+  },
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:markdown"
+  ],
+  "main": "./compiled/src/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "mdHighlight.toggleHighlight",
+        "title": "MD Highlight: Toggle Highlight",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "mdHighlight.clearAll",
+        "title": "MD Highlight: Clear All Highlights"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "mdHighlight.toggleHighlight",
+        "key": "ctrl+alt+h",
+        "when": "editorTextFocus && editorLangId == markdown"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "mdHighlight.toggleHighlight",
+          "when": "editorLangId == markdown",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "mdHighlight.toggleHighlight",
+          "when": "editorLangId == markdown",
+          "group": "1_modification@1"
+        },
+        {
+          "command": "mdHighlight.clearAll",
+          "when": "editorLangId == markdown",
+          "group": "1_modification@2"
+        }
+      ]
+    },
+    "markdown.previewStyles": [
+      "./preview-styles/preview.css"
+    ],
+    "configuration": {
+      "title": "MD File Highlighter",
+      "properties": {
+        "mdHighlight.highlightColor": {
+          "type": "string",
+          "default": "rgba(255, 160, 0, 0.45)",
+          "description": "Background color used to render highlights in the editor. Any valid CSS color string."
+        },
+        "mdHighlight.hideMarkers": {
+          "type": "boolean",
+          "default": false,
+          "description": "Visually hide the <mark></mark> tags so only the highlighted text shows, like a clean preview. Off by default so the literal tags stay visible alongside the colored fill, making highlighted text unmistakable. The tags reappear while the cursor is inside a highlight so you can still edit them."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test:unit": "tsc -p ./ && node --test compiled/test/",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.0",
+    "@types/vscode": "^1.75.0",
+    "@vscode/vsce": "2.19.0",
+    "typescript": "^5.3.0"
+  },
+  "overrides": {
+    "cheerio": "1.0.0-rc.12"
+  }
+}

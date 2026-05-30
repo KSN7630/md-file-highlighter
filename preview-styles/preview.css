@@ -1,0 +1,23 @@
+/*
+ * Injected into VS Code's built-in Markdown preview via the
+ * `markdown.previewStyles` contribution. It styles the <mark> highlight so the
+ * highlighted text matches the editor's in-place highlight color in the
+ * rendered preview.
+ *
+ * Note: a contributed stylesheet is static, so this uses the extension's
+ * default highlight color. The `mdHighlight.highlightColor` setting still
+ * controls the in-editor decoration.
+ */
+mark {
+  /* Orange to match the in-editor decoration. <mark> also renders highlighted
+   * natively in any other Markdown viewer; this just keeps VS Code's preview
+   * on-brand and legible across light/dark themes. */
+  background-color: rgba(255, 160, 0, 0.55);
+  color: #1a1a1a;
+  border: 1px solid rgb(255, 160, 0);
+  border-radius: 2px;
+  padding: 0 2px;
+  /* Keep the highlight intact when the phrase wraps across lines. */
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}

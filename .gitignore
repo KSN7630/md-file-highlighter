@@ -1,0 +1,14 @@
+node_modules/
+compiled/
+*.vsix
+.DS_Store
+.claude/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
