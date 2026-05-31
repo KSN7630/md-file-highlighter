@@ -122,25 +122,42 @@ The same color is injected into VS Code's **built-in Markdown preview** via
 The extension ships as a single `.vsix` file you can install on any machine with
 VS Code — no Marketplace account needed.
 
-**Build the `.vsix`:**
+### Quickest: install the prebuilt `.vsix`
+
+A ready-to-use build is committed in this repo:
+[`md-file-highlighter-0.1.0.vsix`](md-file-highlighter-0.1.0.vsix).
+
+1. **Download it** — on the GitHub page for the file, click **Download raw file**
+   (the ⤓ icon), or clone the repo so the file is on disk.
+2. **Install it** in VS Code, either:
+   - **From the UI:** open the **Extensions** view (`Ctrl+Shift+X`) → click the
+     `…` (More Actions) menu at the top → **Install from VSIX…** → pick the
+     downloaded `md-file-highlighter-0.1.0.vsix`.
+   - **From a terminal:**
+
+     ```bash
+     code --install-extension md-file-highlighter-0.1.0.vsix
+     ```
+3. **Reload** VS Code if prompted. The extension activates automatically on any
+   Markdown file.
+
+To uninstall later: **Extensions** view → find **MD File Highlighter** → gear
+icon → **Uninstall**.
+
+### Alternative: build the `.vsix` yourself
 
 ```bash
 npm install
 npm run package        # produces md-file-highlighter-<version>.vsix
 ```
 
-**Install it** (either way):
+Then install it with either method above.
 
-- In VS Code: open the Extensions view → `…` menu → **Install from VSIX…** →
-  pick the file.
-- Or from a terminal:
+### Try it
 
-  ```bash
-  code --install-extension md-file-highlighter-0.1.0.vsix
-  ```
-
-To try it: open any `.md` file (e.g. [`examples/sample.md`](examples/sample.md)),
-select some text, and click the **✎ Highlight** button or press `Ctrl+Alt+H`.
+Open any `.md` file (e.g. [`examples/sample.md`](examples/sample.md)), select
+some text, and click the **✎ Highlight** button (bottom-right status bar) or
+press `Ctrl+Alt+H`. Press again inside a highlight to remove it.
 
 ---
 
