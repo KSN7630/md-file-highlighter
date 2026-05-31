@@ -183,9 +183,10 @@ from md_highlight import toggle, clear_all
 toggle("## Big-O Notation", [(0, 17)])   # -> "## <mark>Big-O Notation</mark>"
 ```
 
-It mirrors the extension byte-for-byte (same whitespace, paragraph, and
-block-marker rules) and is standard-library only. The live VS Code extension
-itself stays TypeScript — VS Code can't load a Python extension. See
+It mirrors the extension byte-for-byte — same whitespace, paragraph, table,
+fenced-code, inline-construct (code/emphasis/link/tag), and block-marker rules —
+and is standard-library only. The live VS Code extension itself stays
+TypeScript — VS Code can't load a Python extension. See
 [`python-library/README.md`](python-library/README.md).
 
 ---
@@ -205,14 +206,19 @@ src/
       MarkHtmlSyntax.ts       <mark>…</mark>
     text/offsets.ts           offset/line utilities
   services/
-    HighlightService.ts     Pure toggle/clear edit computation (whitespace + paragraph logic)
+    HighlightService.ts     Pure toggle/clear edit computation (whitespace, paragraph, table, code, and link/tag structure-awareness)
     DecorationManager.ts    Owns the decoration resources; repaints highlights
+    StatusBarButton.ts      The ✎ Highlight status-bar button (toggles the active selection)
   adapters/
     EditorGateway.ts        Adapter: VS Code Positions <-> plain integer offsets
   config/Settings.ts        Typed settings reader
   runtime/Runtime.ts        Mutable holder so config changes apply live
   commands/                 Command pattern: Toggle / ClearAll (+ ICommand)
 ```
+
+The same pure logic is mirrored, byte-for-byte, as a standard-library Python
+package under [`python-library/`](python-library/) — see
+[Python logic library](#python-logic-library).
 
 ### How a toggle flows
 
@@ -244,8 +250,21 @@ npm run test:unit    # tsc + node:test (zero runtime deps)
 Then open [`examples/sample.md`](examples/sample.md), select some text, and press
 `Ctrl+Alt+H`.
 
-The unit suite covers the toggle/unwrap logic, whitespace hugging,
-multi-paragraph splitting, and CRLF handling.
+The unit suite covers the full toggle/unwrap and clear-all logic, whitespace
+hugging, multi-paragraph splitting, multi-cursor selections, and CRLF handling,
+plus every structure-aware rule from [Selection handling](#selection-handling):
+tables (per-cell wrapping and the untouched delimiter row), fenced code blocks,
+inline code spans, `*`/`_`/`~` emphasis runs, links/images, and autolinks /
+inline HTML tags.
+
+The Python library carries the **same suite** (`python-library/tests/`) so both
+implementations stay in lock-step, plus property/fuzz tests that assert no
+`<mark>` ever lands somewhere that breaks rendering:
+
+```bash
+cd python-library
+PYTHONPATH=src python -m unittest discover -s tests -t .
+```
 
 ## License
 
