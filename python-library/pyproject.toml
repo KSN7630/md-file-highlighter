@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "md-highlight"
+version = "0.1.0"
+description = "Highlight-logic library mirroring the MD File Highlighter VS Code extension. Standard library only."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -164,6 +164,163 @@ test("inline emphasis at line start is not mistaken for a list bullet", () => {
   assert.equal(apply(text, edits), "<mark>*emphasized* text</mark>");
 });
 
+test("a table row is highlighted per cell, never crossing a pipe", () => {
+  const text =
+    "| Notation | Name |\n| --- | --- |\n| `O(1)` | Constant |";
+  const edits = service().computeToggleEdits(text, [{ start: 0, end: text.length }]);
+  assert.equal(
+    apply(text, edits),
+    "| <mark>Notation</mark> | <mark>Name</mark> |\n" +
+      "| --- | --- |\n" +
+      "| <mark>`O(1)`</mark> | <mark>Constant</mark> |",
+  );
+});
+
+test("the table delimiter row is never wrapped", () => {
+  const text = "| A | B |\n| --- | --- |\n| 1 | 2 |";
+  const out = apply(text, service().computeToggleEdits(text, [{ start: 0, end: text.length }]));
+  assert.ok(out.includes("| --- | --- |"));
+  assert.ok(!out.includes("<mark>---"));
+});
+
+test("a pipe inside inline code is not treated as a cell boundary", () => {
+  const text = "| `a | b` | Name |\n| --- | --- |";
+  const edits = service().computeToggleEdits(text, [{ start: 0, end: text.length }]);
+  // The `a | b` code span stays one cell; its inner pipe is not split on.
+  assert.equal(
+    apply(text, edits),
+    "| <mark>`a | b`</mark> | <mark>Name</mark> |\n| --- | --- |",
+  );
+});
+
+test("text that merely contains a pipe but is no table is wrapped whole", () => {
+  const text = "use the | operator carefully";
+  const edits = service().computeToggleEdits(text, [{ start: 0, end: text.length }]);
+  assert.equal(apply(text, edits), "<mark>use the | operator carefully</mark>");
+});
+
+test("a fenced code block is never wrapped", () => {
+  const text = "intro\n\n```python\nx = 1\n```\n\noutro";
+  const edits = service().computeToggleEdits(text, [{ start: 0, end: text.length }]);
+  assert.equal(
+    apply(text, edits),
+    "<mark>intro</mark>\n\n```python\nx = 1\n```\n\n<mark>outro</mark>",
+  );
+});
+
+test("a blank line inside a fenced block does not split prose around it", () => {
+  const text = "```\nline1\n\nline2\n```";
+  const edits = service().computeToggleEdits(text, [{ start: 0, end: text.length }]);
+  // Nothing is wrapped — the whole selection is code.
+  assert.equal(edits.length, 0);
+});
+
+test("a partial selection of one table cell wraps only that text", () => {
+  const text = "| Constant time | Name |\n| --- | --- |";
+  const start = text.indexOf("time");
+  const edits = service().computeToggleEdits(text, [{ start, end: start + 4 }]);
+  assert.equal(
+    apply(text, edits),
+    "| Constant <mark>time</mark> | Name |\n| --- | --- |",
+  );
+});
+
+test("a selection inside an inline code span expands to the whole span", () => {
+  const text = "the `O(n log n)` bound";
+  const start = text.indexOf("log n");
+  const edits = service().computeToggleEdits(text, [{ start, end: start + 5 }]);
+  // The mark must not land inside the backticks (it would render literally).
+  assert.equal(apply(text, edits), "the <mark>`O(n log n)`</mark> bound");
+});
+
+test("inside an inline code span in a table cell expands to the span", () => {
+  const text = "| `O(n log n)` | Name |\n| --- | --- |";
+  const start = text.indexOf("log n");
+  const edits = service().computeToggleEdits(text, [{ start, end: start + 5 }]);
+  assert.equal(
+    apply(text, edits),
+    "| <mark>`O(n log n)`</mark> | Name |\n| --- | --- |",
+  );
+});
+
+test("a selection that splits a ** run snaps out so bold is not broken", () => {
+  const text = "- **Array** is contiguous";
+  const start = text.indexOf("*Array"); // the 2nd asterisk of the opening **
+  const edits = service().computeToggleEdits(text, [{ start, end: text.length }]);
+  // The opening ** stays together (no stray "*<mark>*").
+  assert.equal(apply(text, edits), "- <mark>**Array** is contiguous</mark>");
+  assert.ok(!apply(text, edits).includes("*<mark>*"));
+});
+
+test("a mark inside intact bold/code does not get disturbed", () => {
+  const text = "a **bold** word";
+  // Select just "bold" (inside the **). The ** are outside the selection.
+  const start = text.indexOf("bold");
+  const edits = service().computeToggleEdits(text, [{ start, end: start + 4 }]);
+  assert.equal(apply(text, edits), "a **<mark>bold</mark>** word");
+});
+
+test("a selection inside a link's text expands to wrap the whole link", () => {
+  const text = "see the [docs page](https://example.com) now";
+  const start = text.indexOf("docs");
+  const edits = service().computeToggleEdits(text, [{ start, end: start + 4 }]);
+  // The mark must wrap the entire [text](url), never landing inside it.
+  assert.equal(
+    apply(text, edits),
+    "see the <mark>[docs page](https://example.com)</mark> now",
+  );
+});
+
+test("a selection ending between a link's ] and ( does not break the link", () => {
+  const text = "read [the guide](/guide) carefully";
+  const end = text.indexOf("]") + 1; // right after the closing ]
+  const edits = service().computeToggleEdits(text, [{ start: 0, end }]);
+  const out = apply(text, edits);
+  // The link stays intact (no <mark> wedged between ] and `(`).
+  assert.ok(out.includes("[the guide](/guide)"));
+  assert.ok(!out.includes("]<mark>"));
+  assert.ok(!out.includes("]</mark>("));
+});
+
+test("an image is treated as one atomic unit", () => {
+  const text = "logo ![alt text](img.png) here";
+  const start = text.indexOf("alt");
+  const edits = service().computeToggleEdits(text, [{ start, end: start + 3 }]);
+  assert.equal(
+    apply(text, edits),
+    "logo <mark>![alt text](img.png)</mark> here",
+  );
+});
+
+test("a reference-style link is not split", () => {
+  const text = "see [the docs][ref] today";
+  const start = text.indexOf("docs");
+  const edits = service().computeToggleEdits(text, [{ start, end: start + 4 }]);
+  assert.equal(apply(text, edits), "see <mark>[the docs][ref]</mark> today");
+});
+
+test("an autolink / inline HTML tag is never split by a mark", () => {
+  const text = "visit <https://example.com> for more";
+  const start = text.indexOf("example");
+  const edits = service().computeToggleEdits(text, [{ start, end: start + 7 }]);
+  assert.equal(
+    apply(text, edits),
+    "visit <mark><https://example.com></mark> for more",
+  );
+});
+
+test("a selection across paired inline HTML tags keeps both tags intact", () => {
+  const text = "x<sub>2</sub> y";
+  // Select from inside the opening tag through inside the closing tag.
+  const start = text.indexOf("sub>") + 1;
+  const end = text.indexOf("</sub>") + 3;
+  const out = apply(text, service().computeToggleEdits(text, [{ start, end }]));
+  // Neither <sub> nor </sub> is broken open by a stray <mark>.
+  assert.ok(out.includes("<sub>"));
+  assert.ok(out.includes("</sub>"));
+  assert.ok(!out.includes("<su<mark>"));
+});
+
 test("matchAll reports each marker's inner text and offsets", () => {
   const syntax = new MarkHtmlSyntax();
   const matches = syntax.matchAll("x <mark>hi</mark> y");

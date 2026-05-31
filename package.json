@@ -8,7 +8,7 @@
   "homepage": "https://www.ownedbyindia.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/USERNAME/md-file-highlighter.git"
+    "url": "https://github.com/KSN7630/md-file-highlighter.git"
   },
   "engines": {
     "vscode": "^1.75.0"

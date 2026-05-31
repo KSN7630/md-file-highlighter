@@ -69,6 +69,22 @@ never corrupts your content:
   one `<mark>` per paragraph, leaving the blank-line separators intact.
 - **Soft line breaks stay together.** A single newline inside one paragraph
   remains within one marker.
+- **Tables are highlighted per cell.** A selection across a table wraps each
+  cell on its own, never crossing a `|` or a row, and never touches the
+  `| --- |` delimiter row — so the table keeps rendering. Pipes inside inline
+  code (`` `a | b` ``) are respected.
+- **Fenced code blocks are left alone.** A `<mark>` is never written inside a
+  ```` ``` ```` / `~~~` block, where it would otherwise appear as literal text.
+- **Inline spans are never split.** If a selection starts/ends inside an inline
+  code span (`` `code` ``) the marker expands to wrap the whole span (so it
+  never renders literally), and it never splits a `**`/`*`/`_`/`~` emphasis run
+  into a stray delimiter.
+- **Links, images, and inline tags stay whole.** A boundary that lands inside a
+  link/image (`[text](url)`, `![alt](url)`, `[text][ref]`) or an autolink /
+  inline HTML tag (`<https://…>`, `<sub>`, `</b>`) expands to wrap the whole
+  construct, so the `<mark>` is never wedged into a `](` or split a tag open.
+- Leading block markers (`#`, `-`, `1.`, `>`) stay **outside** the marker so the
+  line keeps rendering as a heading/list/quote.
 - Works with **multi-cursor** selections and recognizes both `LF` and `CRLF`
   blank lines.
 
@@ -136,6 +152,24 @@ platform primitives.
 - **Runtime:** none. Pure TypeScript against the built-in `vscode` API.
 - **Dev-only:** `typescript`, `@types/vscode`, `@types/node`, and `@vscode/vsce`
   (packaging). Tests run on Node's built-in `node:test`.
+
+---
+
+## Python logic library
+
+The same highlight logic is also available as a standalone Python package in
+[`python-library/`](python-library/) (`md_highlight`), so teams that prefer
+Python can run and test the behavior **without VS Code** — in CI or scripts:
+
+```python
+from md_highlight import toggle, clear_all
+toggle("## Big-O Notation", [(0, 17)])   # -> "## <mark>Big-O Notation</mark>"
+```
+
+It mirrors the extension byte-for-byte (same whitespace, paragraph, and
+block-marker rules) and is standard-library only. The live VS Code extension
+itself stays TypeScript — VS Code can't load a Python extension. See
+[`python-library/README.md`](python-library/README.md).
 
 ---
 
